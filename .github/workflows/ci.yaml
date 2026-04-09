@@ -43,17 +43,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Login to Docker Hub   # ✅ important
+      - name: Login to Docker Hub
         run: |
           echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-      - name: Wait for image availability
-        run: sleep 10   # ✅ évite bug Docker Hub
+      - name: Pull image manually   # ✅ IMPORTANT
+        run: |
+          docker pull $DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
 
-      - name: Run Trivy vulnerability scanner
+      - name: Run Trivy scan
         uses: aquasecurity/trivy-action@v0.20.0
         with:
-          image-ref: ${{ env.DOCKER_REGISTRY }}/$IMAGE_NAME:$IMAGE_TAG
+          image-ref: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
           format: table
           severity: CRITICAL,HIGH
           vuln-type: os,library
