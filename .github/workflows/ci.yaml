@@ -14,7 +14,7 @@ env:
 jobs:
 
   # ===============================
-  # JOB 1 - SECURITY SCAN (CRITICAL BLOCK)
+  # JOB 1 - SECURITY SCAN
   # ===============================
   scan:
     name: Security Scan (Production Gate)
@@ -37,51 +37,26 @@ jobs:
           severity: CRITICAL
           vuln-type: os,library
           ignore-unfixed: true
-          exit-code: 1   
+          exit-code: 1
 
   # ===============================
-  # JOB 2 - DEPLOYMENT (runner_prod)
+  # JOB 2 - DEPLOY (SIMULÉ)
   # ===============================
   deploy:
-    name: Deploy to Production Server
+    name: Simulated Deployment
     needs: scan
-    runs-on: self-hosted   # runner_prod
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Login Docker Hub
-        run: |
-          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-
       - name: Pull image
         run: |
           docker pull $DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
 
-      - name: Stop old container
+      - name: Run container (simulation)
         run: |
-          docker stop intranet-prod || true
-          docker rm intranet-prod || true
+          docker run -d -p 80:80 --name intranet-prod \
+          $DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
 
-      - name: Run container on port 80
+      - name: Verify container
         run: |
-          docker run -d \
-            -p 80:80 \
-            --name intranet-prod \
-            $DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
-
-      - name: Send email notification
-        if: always()
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.gmail.com
-          server_port: 587
-          username: ${{ secrets.MAIL }}
-          password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: "CD Pipeline - Production Status"
-          to: team@newdeal.sn
-          from: GitHub Actions
-          body: |
-            Pipeline Production terminé.
-
-            Statut : ${{ job.status }}
-
-            Application déployée sur runner_prod.
+          docker ps
