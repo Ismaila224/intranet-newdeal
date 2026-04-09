@@ -17,7 +17,7 @@ jobs:
   # JOB 1 - SECURITY SCAN
   # ===============================
   scan:
-    name: Security Scan (Production Gate)
+    name: scan security 
     runs-on: ubuntu-latest
 
     steps:
@@ -40,10 +40,10 @@ jobs:
           exit-code: 1
 
   # ===============================
-  # JOB 2 - DEPLOY (SIMULÉ)
+  # JOB 2 - DEPLOYMENT
   # ===============================
   deploy:
-    name: Simulated Deployment
+    name: Deployment
     needs: scan
     runs-on: ubuntu-latest
 
